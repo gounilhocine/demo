@@ -1,3 +1,17 @@
+Liste de API indezer:
+
+1- Barcode
+2- QrCode
+3- AddBarCode2Pdf
+4- SplitPdf
+5- MergePdfs
+6- MergesDocs
+7- Doc2Pdf (office docs)
+8- ImageConverter
+9- Template2Pdf
+10- FTM
+
+
 Excel to pdf:
 https://github.com/nakazawaken1/Excel-To-PDF-with-POI-and-PDFBox
 
