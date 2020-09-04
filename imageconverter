@@ -47,3 +47,175 @@ https://stackoverflow.com/questions/2291358/how-do-i-convert-a-tif-to-png-in-jav
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.image;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.ParameterBlock;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.stream.IntStream;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import javax.media.jai.JAI;
+import javax.media.jai.RenderedOp;
+
+import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Method;
+import org.imgscalr.Scalr.Mode;
+
+import com.sun.media.jai.codec.FileSeekableStream;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.SeekableStream;
+
+public class ImageConverter {
+
+	public static void main(String[] args) throws Exception {
+
+		String imageSrc = "c:/demo/indezer/image2image/src.tiff";
+		String imageDest = "c:/demo/indezer/image2image/dest.png";
+		File fileSrc = new File(imageSrc);
+		InputStream inputStream = new FileInputStream(fileSrc);
+
+		File fileDest = new File(imageDest);
+		OutputStream os = new FileOutputStream(fileDest);
+
+		// resize("png", inputStream, os, 150, 150);
+		// readMultiPageTiff(imageSrc);*
+		convertTiffToPng(fileSrc);
+	}
+
+	synchronized public static void resize(String filename, InputStream orig, OutputStream dest, int width, int height) throws IOException {
+		if (width > 0 || height > 0) {
+
+			// String formatName = getFormatName(filename);
+
+			Mode mode = Mode.AUTOMATIC;
+			if (height == 0)
+				mode = Mode.FIT_TO_WIDTH;
+			else if (width == 0)
+				mode = Mode.FIT_TO_HEIGHT;
+
+			BufferedImage src = ImageIO.read(orig);
+			BufferedImage thumbnail = null;
+			if (src.getHeight() < height && src.getWidth() < width) {
+				thumbnail = src;
+			} else {
+				thumbnail = Scalr.resize(src, Method.ULTRA_QUALITY, mode, width, height);
+			}
+			if (!ImageIO.write(thumbnail, filename, dest)) {
+				throw new IOException("ImageIO.write error");
+			}
+		}
+	}
+
+	public static void convertTiffToPng(File file) {
+		try {
+			try (InputStream is = new FileInputStream(file)) {
+				try (ImageInputStream imageInputStream = ImageIO.createImageInputStream(is)) {
+					Iterator<ImageReader> iterator = ImageIO.getImageReaders(imageInputStream);
+					if (iterator == null || !iterator.hasNext()) {
+						throw new RuntimeException("Image file format not supported by ImageIO: " + file.getAbsolutePath());
+					}
+
+					// We are just looking for the first reader compatible:
+					ImageReader reader = iterator.next();
+					reader.setInput(imageInputStream);
+
+					int numPage = reader.getNumImages(true);
+
+					// it uses to put new png files, close to original example n0_.tiff will be in /png/n0_0.png
+					String name = file.getName();
+					String parentFolder = file.getParentFile().getAbsolutePath();
+
+					IntStream.range(0, numPage).forEach(v -> {
+						try {
+							final BufferedImage tiff = reader.read(v);
+							ImageIO.write(tiff, "png", new File(parentFolder + File.separator + "test.PSD"));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static RenderedImage[] readMultiPageTiff(String fileName) throws IOException {
+		File file = new File(fileName);
+		SeekableStream seekableStream = new FileSeekableStream(file);
+		ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", seekableStream, null);
+		// int numPages = decoder.getNumPages();
+		RenderedImage image[] = new RenderedImage[1];
+		// int count = 0;
+		// for (
+		// int i = 0;
+		// i < decoder.getNumPages();
+		// i++) {
+		// image[i] = decoder.decodeAsRenderedImage(i);
+		// count++;
+		// }
+
+		String newFolderName;
+		String s3 = fileName;
+		String[] temp = null;
+		temp = s3.split("\\.");
+
+		int j;
+		j = 0;
+		do {
+			newFolderName = temp[j];
+			String spoonFeeding = newFolderName;
+			File f = new File(spoonFeeding);
+			f.mkdirs();
+			j++;
+		} while (j < 1);
+
+		for (
+				int i = 0;
+				i < 1;
+				i++) {
+			RenderedImage page = decoder.decodeAsRenderedImage(i);
+			File fileObj = new File(newFolderName + "/" + (i + 1) + ".png");
+			System.out.println("Saving " + fileObj.getCanonicalPath());
+			ParameterBlock parBlock = new ParameterBlock();
+			parBlock.addSource(page);
+			parBlock.add(fileObj.toString());
+			parBlock.add("png");
+			RenderedOp renderedOp = JAI.create("filestore", parBlock);
+			renderedOp.dispose();
+		}
+		return image;
+	}
+
+}
+
+
+
+
+
