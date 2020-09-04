@@ -54,7 +54,7 @@ public class AddBarCodeToExistFile2 {
 			table.writeSelectedRows(1, 1, 110, 150, over);
 			over.addTemplate(template, x, y);
 		}
-		stamper.close();
+		stamper.close(); 
 		reader.close();
 	}
 }
