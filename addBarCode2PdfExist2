@@ -3,17 +3,20 @@ import java.io.IOException;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.Barcode;
 import com.itextpdf.text.pdf.Barcode128;
-import com.itextpdf.text.pdf.Barcode39;
 import com.itextpdf.text.pdf.BarcodeEAN;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfTemplate;
 
-public class AddBarCodeToExistFile {
+public class AddBarCodeToExistFile2 {
 
 	public static void main(String[] args) throws IOException, DocumentException {
 		String src = "C:\\demo\\indezer\\addbarcode\\src.pdf";
@@ -23,18 +26,32 @@ public class AddBarCodeToExistFile {
 		PdfStamper stamper = new PdfStamper(reader, new FileOutputStream(dest));
 		int n = reader.getNumberOfPages();
 		Rectangle pagesize;
-		for (int i = 1; i <= n; i++) { //all pages
+		for (
+				int i = 1;
+				i <= n;
+				i++) {
 			PdfContentByte over = stamper.getOverContent(i);
 			pagesize = reader.getPageSize(i);
-			float x = pagesize.getLeft() + 500;
+			float x = pagesize.getLeft() + 400;
 			float y = pagesize.getTop() - 500;
-			Barcode128 barcode = new Barcode128();
-			barcode.setCodeType(Barcode.CODE128);
-			barcode.setBarHeight(10);
-			barcode.setStartStopText(false); //
-			barcode.setFont(null);// without text
-			barcode.setCode(code);
-			PdfTemplate template = barcode.createTemplateWithBarcode(over, BaseColor.BLUE, BaseColor.BLACK);
+			
+			
+			PdfPTable table = new PdfPTable(4);
+			Barcode128 code128 = new Barcode128();
+			code128.setBaseline(-1);
+			code128.setSize(12);
+			code128.setCode(code);
+			code128.setCodeType(Barcode128.CODE128);
+			Image code128Image = code128.createImageWithBarcode(over, null, null);
+			PdfTemplate template = code128.createTemplateWithBarcode(over, BaseColor.BLUE, BaseColor.BLACK);
+			PdfPCell cell = new PdfPCell(code128Image);
+			cell.addElement(new Phrase("PO #: " + code));
+			cell.addElement(code128Image);
+			table.addCell(cell);
+			table.setTotalWidth(770F);
+			table.addCell(code128Image);
+			code128Image.setAbsolutePosition(x, y);
+			table.writeSelectedRows(1, 1, 110, 150, over);
 			over.addTemplate(template, x, y);
 		}
 		stamper.close();
