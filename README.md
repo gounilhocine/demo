@@ -4,6 +4,10 @@ https://github.com/nakazawaken1/Excel-To-PDF-with-POI-and-PDFBox
 Merge word doc:
 https://stackoverflow.com/questions/11592028/merging-ms-word-documents-with-java
 
+Upload + download file:
+https://dzone.com/articles/java-springboot-rest-api-to-uploaddownload-file-on
+
+
 commande pour upload un fichier et download en meme temps 
  curl  -i -X GET  "http://localhost:8080/download?param=C:/demo/indezer/upload/1.docx" -o C:/demo/indezer/upload/111.d
 ocx
