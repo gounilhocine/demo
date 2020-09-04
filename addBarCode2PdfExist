@@ -1,0 +1,43 @@
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.Barcode;
+import com.itextpdf.text.pdf.Barcode128;
+import com.itextpdf.text.pdf.Barcode39;
+import com.itextpdf.text.pdf.BarcodeEAN;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
+import com.itextpdf.text.pdf.PdfTemplate;
+
+public class AddBarCodeToExistFile {
+
+	public static void main(String[] args) throws IOException, DocumentException {
+		String src = "C:\\demo\\indezer\\addbarcode\\src.pdf";
+		String dest = "C:\\demo\\indezer\\addbarcode\\dest.pdf";
+		String code = "4660321002132132";
+		PdfReader reader = new PdfReader(src);
+		PdfStamper stamper = new PdfStamper(reader, new FileOutputStream(dest));
+		int n = reader.getNumberOfPages();
+		Rectangle pagesize;
+		for (int i = 1; i <= n; i++) { //all pages
+			PdfContentByte over = stamper.getOverContent(i);
+			pagesize = reader.getPageSize(i);
+			float x = pagesize.getLeft() + 500;
+			float y = pagesize.getTop() - 500;
+			Barcode128 barcode = new Barcode128();
+			barcode.setCodeType(Barcode.CODE128);
+			barcode.setBarHeight(10);
+			barcode.setStartStopText(false); //
+			barcode.setFont(null);// without text
+			barcode.setCode(code);
+			PdfTemplate template = barcode.createTemplateWithBarcode(over, BaseColor.BLUE, BaseColor.BLACK);
+			over.addTemplate(template, x, y);
+		}
+		stamper.close();
+		reader.close();
+	}
+}
