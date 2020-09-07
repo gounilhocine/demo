@@ -10,7 +10,7 @@ Liste de API indezer:
 6- Template --> TEMPLATE<br>
 7- Transfer Files --> FTM<br>
 8- Email --> EMAIL<br>
-9- Search --> SEARCH<br>
+9- Comparator --> COMPARATOR<br>
 
 
 Excel to pdf:
