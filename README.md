@@ -5,7 +5,7 @@ Liste de API indezer:
 1- Barcode --> BAR_CODE <br>
 2- QrCode --> QR_CODE<br>
 3- Pdf --> PDF<br>
-4- Docs office --> OFFICE_DOCS<br>
+4- Office Docs --> OFFICE_DOCS<br>
 5- Image --> IMAGE<br>
 6- Template --> TEMPLATE<br>
 7- Transfer Files --> FTM<br>
