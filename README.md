@@ -1,15 +1,16 @@
 Liste de API indezer:
 
-1- Barcode
-2- QrCode
-3- AddBarCode2Pdf
-4- SplitPdf
-5- MergePdfs
-6- MergesDocs
-7- Doc2Pdf (office docs)
-8- ImageConverter
-9- Template2Pdf
-10- FTM
+Liste de API indezer:
+
+1- Barcode --> BAR_CODE <br>
+2- QrCode --> QR_CODE<br>
+3- Pdf --> PDF<br>
+4- Docs office --> OFFICE_DOCS<br>
+5- Image --> IMAGE<br>
+6- Template --> TEMPLATE<br>
+7- Transfer Files --> FTM<br>
+8- Email --> EMAIL<br>
+9- Search --> SEARCH<br>
 
 
 Excel to pdf:
