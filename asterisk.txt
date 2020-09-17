@@ -1,0 +1,308 @@
+=======================================
+Asterisk: 1- installer asterisk
+=======================================
+https://gist.github.com/serverok/6741ab13c2c8a647cf43f6e1d645cf6b
+
+https://docplayer.fr/68096502-Un-peuple-un-but-une-foi-couplage-a2billing-asterisk-et-cdr.html
+
+https://computingforgeeks.com/how-to-install-asterisk-16-lts-on-ubuntu-debian-linux/
+https://computingforgeeks.com/how-to-install-asterisk-16-centos-7-linux/
+
+https://docplayer.fr/2326769-Simulation-d-un-provider-toip-base-sur-asterisk-et-a2billing.html
+https://docplayer.fr/2326767-Procedure-d-installation-trixbox-a2billing.html
+https://docplayer.fr/793469-Installation-d-une-passerelle-telephonie-sur-ip-avec-asterisk.html
+
+=======================================
+Asterisk: 2- cdr mysql configuration
+=======================================
+sudo apt-get install mysql-server php5-mysql apache2 git
+sudo service apache2 restart
+
+mysql -u root -p
+CREATE DATABASE asteriskcdrdb;
+GRANT ALL PRIVILEGES ON asteriskcdrdb.* TO  asteriskcdr@localhost  IDENTIFIED BY 'PASSWORD';
+flush privileges;
+use asteriskcdrdb;
+
+CREATE TABLE cdr (
+   calldate datetime NOT NULL default '0000-00-00 00:00:00',
+   clid varchar(80) NOT NULL default '',
+   src varchar(80) NOT NULL default '',
+   dst varchar(80) NOT NULL default '',
+   dcontext varchar(80) NOT NULL default '',
+   channel varchar(80) NOT NULL default '',
+   dstchannel varchar(80) NOT NULL default '',
+   lastapp varchar(80) NOT NULL default '',
+   lastdata varchar(80) NOT NULL default '',
+   duration int(11) NOT NULL default '0',
+   billsec int(11) NOT NULL default '0',
+   disposition varchar(45) NOT NULL default '',
+   amaflags int(11) NOT NULL default '0',
+   accountcode varchar(20) NOT NULL default '',
+   uniqueid varchar(32) NOT NULL default '',
+   userfield varchar(255) NOT NULL default '',
+   did varchar(50) NOT NULL default '',
+   recordingfile varchar(255) NOT NULL default '',
+   KEY `calldate` (`calldate`),
+   KEY `dst` (`dst`),
+   KEY `accountcode` (`accountcode`),
+   KEY `uniqueid` (`uniqueid`)
+);
+
+
+vi /etc/asterisk/cdr_mysql.conf
+
+[global]
+hostname=localhost
+dbname=asteriskcdrdb
+table=cdr
+password=PASSWORD
+user=asteriskcdr
+
+
+vi /etc/asterisk/modules.conf
+
+load => cdr_mysql.so
+noload => cdr_radius.so
+
+sudo asterisk -rvv
+module load cdr_mysql.so
+module show like cdr_mysql.so
+
+mysql -u root -p
+use asteriskcdrdb;
+select * from cdr;
+
+
+In fact, now you can use data from the database in any convenient way, for example, to add to any billing script statistics and graphs.
+We’ll set up the finished Asterisk CDR Viewer.
+Download the files and move them to the web server directory:
+
+
+cd /tmp/
+git clone https://github.com/g613/asterisk-cdr-viewer/
+cd asterisk-cdr-viewer
+tar -xzvf asterisk-cdr-viewer-latest.tgz
+mv asterisk-cdr-viewer /var/www/asterisk-cdr-viewer
+chown -R www-data:www-data /var/www/
+
+The Russian version can be found here https://github.com/prog-it/Asterisk-CDR-Viewer-Mod
+
+Copy the file with the web configuration to the directory with the web server apache2:
+
+cp /var/www/asterisk-cdr-viewer/contrib/httpd/asterisk-cdr-viewer.conf /etc/apache2/conf-enabled/asterisk-cdr-viewer.conf
+service apache2 restart
+
+Specify the connection settings for the database for the Asterisk-CDR-viewer in the file /var/www/asterisk-cdr-viewer/include/config.inc.php
+
+After that you will be able to view the statistics by opening in the browser http://SERVER/acdr
+
+In version 1.0.9, I noticed a typo in the code, because of which a white screen was displayed and there was an error in the logs:
+
+    PHP Parse error: syntax error, unexpected ‘[‘ in /var/www/asterisk-cdr-viewer/index.php on line 23
+
+To fix this, open the file index.php and at the end of the 23 line we will see the missing $:
+
+$startmonth = is_blank($_REQUEST['startmonth']) ? date('m') : printf('%02d',_REQUEST['startmonth']);
+
+It should be like this:
+
+$startmonth = is_blank($_REQUEST['startmonth']) ? date('m') : printf('%02d',$_REQUEST['startmonth']);
+
+Done.
+
+
+
+
+
+=======================================
+Asterisk: 3- realtime SIP configuration
+=======================================
+
+url: https://voxlink.ru/kb/asterisk-configuration/asterisk-realtime-sip/
+
+
+vi  /etc/asterisk/extconfig.conf   
+
+Add the following line, swapping your own personal values if you wish:
+
+[settings]
+sipusers => mysql,general,sipfriends
+sippeers => mysql,general,sipfriends
+voicemail => mysql,asterisk,voicemail
+extensions => mysql,general,extensions
+
+put the following in /etc/asterisk/res_mysql.conf
+
+[general]
+dbhost = 127.0.0.1
+dbname = asterisk
+dbuser = myuser
+dbpass = mypass
+dbport = 3306
+
+
+
+vi /etc/asterisk/sip.conf
+
+[general]
+context=default		; Default context for incoming calls
+allowguest=yes			; Allow or reject guest calls (default is yes, this can also be set to 'osp'
+bindport=5060			; UDP Port to bind to (SIP standard port is 5060)
+bindaddr=0.0.0.0		; IP address to bind to (0.0.0.0 binds to all)
+srvlookup=yes			; Enable DNS SRV lookups on outbound calls
+;domain=voicemail		; Set default domain for this host
+;domain=mydomain.tld,mydomain-incoming
+;domain=127.0.0.1			; Add IP address as local domain
+;allowexternalinvites=no	; Disable INVITE and REFER to non-local domains
+autodomain=yes			; Turn this on to have Asterisk add local host
+pedantic=yes			; Enable slow, pedantic checking for Pingtel
+;tos=184			; Set IP QoS to either a keyword or numeric val
+;tos=lowdelay			; lowdelay,throughput,reliability,mincost,none
+;maxexpiry=3600			; Max length of incoming registration we allow
+;defaultexpiry=120		; Default length of incoming/outoing registration
+;notifymimetype=text/plain	; Allow overriding of mime type in MWI NOTIFY
+checkmwi=10			; Default time between mailbox checks for peers
+vmexten=default     		; dialplan extension to reach mailbox sets the 
+;videosupport=yes		; Turn on support for SIP video
+;recordhistory=yes		; Record SIP history by default 
+disallow=all			; First disallow all codecs
+allow=ulaw			; Allow codecs in order of preference
+language=en			; Default language setting for all users/peers
+;rtpholdtimeout=300		; Terminate call if 300 seconds of no RTP activity
+;trustrpid = no			; If Remote-Party-ID should be trusted
+;sendrpid = yes			; If Remote-Party-ID should be sent
+useragent=Asterisk PBX		; Allows you to change the user agent string
+;dtmfmode = rfc2833		; Set default dtmfmode for sending DTMF. Default: rfc2833
+				; Other options: 
+				; info : SIP INFO messages
+				; inband : Inband audio (requires 64 kbit codec -alaw, ulaw)
+				; auto : Use rfc2833 if offered, inband otherwise
+
+
+add table :
+
+
+CREATE TABLE `sipfriends` (  
+`name` varchar(40) NOT NULL default '',  
+`type` varchar(10) NOT NULL default '',  
+`defaultuser` varchar(40),  
+`fromuser` varchar(40),  
+`fromdomain` varchar(40),  
+`secret` varchar(40),  
+`md5secret` varchar(40),  
+`auth` varchar(10),  
+`mailbox` varchar(20),  
+`subscribemwi` varchar(10), -- yes/no  
+`vmexten` varchar(20),  
+`callerid` varchar(40),
+`cid_number` varchar(40),  
+`callingpres` varchar(20),  
+`usereqphone` varchar(10),  
+`language` varchar(10),  
+`incominglimit` varchar(10),  
+`context` varchar(40) NOT NULL default '',  
+`subscribecontext` varchar(40),  
+`amaflags` varchar(20),  
+`accountcode` varchar(20),  
+`musicclass` varchar(20),  
+`mohsuggest` varchar(20),  
+`allowtransfer` varchar(20),  
+`callgroup` varchar(20),  
+`pickupgroup` varchar(20),  
+`autoframing` varchar(10), -- yes/no  
+`disallow` varchar(20) default 'all',  
+`allow` varchar(20),  
+`maxcallbitrate` varchar(15),  
+`host` varchar(40) default 'dynamic',  
+`outboundproxy` varchar(40),  
+`ipaddr` varchar(20) NOT NULL default '',  
+`defaultip` varchar(20),  
+`port` int(6) NOT NULL default '0',  
+`fullcontact` varchar(128),  
+`insecure` varchar(20),  
+`qualify` varchar(15),  
+`regseconds` int(11) NOT NULL default '0',  
+`regexten` varchar(20),  
+`regserver` varchar(20),  
+`rtptimeout` varchar(15),  
+`rtpholdtimeout` varchar(15),  
+`rtpkeepalive` varchar(15),  
+`lastms` int(11) NOT NULL default '-1',  
+`setvar` varchar(200),  
+`useragent` varchar(50),  PRIMARY KEY  (`name`),  INDEX host (host, port),  INDEX ipaddr (ipaddr, port)
+) 
+TYPE=MyISAM;
+
+
+mysql> insert into sipfriends setname='1001',type='friend',context='internal',host='dynamic',disallow='all',allow='gsm',qualify='yes';
+mysql> insert into sipfriends setname='1002',type='friend',context='internal',host='dynamic',disallow='all',allow='gsm',qualify='yes';
+
+
+sip show users   
+sip show peers
+
+
+=======================================
+Asterisk: 3- realtime extensions  configuration
+=======================================
+
+vi  /etc/asterisk/extconfig.conf   
+
+Add the following line, swapping your own personal values if you wish:
+
+[settings]
+sipusers => mysql,general,sip_buddies
+sippeers => mysql,general,sip_buddies
+voicemail => mysql,asterisk,voicemail
+extensions => mysql,general,extensions
+
+
+vi etc/asterisk/extensions.conf 
+
+switch => Realtime
+
+
+CREATE TABLE `extensions` (  `id` int(11) NOT NULL AUTO_INCREMENT,  `context` varchar(20) NOT NULL DEFAULT '',  `exten` varchar(20) NOT NULL DEFAULT '',
+ `priority` tinyint(4) NOT NULL DEFAULT '0',  `app` varchar(20) NOT NULL DEFAULT '',  `appdata` varchar(128) NOT NULL DEFAULT '',  PRIMARY KEY (`context`,`exten`,`priority`),  KEY `id` (`id`)) ENGINE=MyISAM;
+
+
+As an example, let's insert an Echo() application as extension 100. Enter the following informationin the database 
+
+mysql> insert into extensions setcontext='internal',exten='100',priority='1',app='Playback',appdata='demo-echotest';
+mysql> insert into extensions setcontext='internal',exten='100',priority='2',app='Echo',appdata='';
+
+=======================================
+Asterisk: 4- install a2billing
+=======================================
+https://docplayer.fr/68096502-Un-peuple-un-but-une-foi-couplage-a2billing-asterisk-et-cdr.html
+
+
+
+
+
+
+
+
+
+Liste de provier voip sip
+
+https://www.voip-catalog.com/voip_catcountry_sip-trunking_germany_1.html
+
+ippi.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
