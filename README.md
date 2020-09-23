@@ -1,3 +1,8 @@
+Install Apache James
+--------------------
+http://blog.inflinx.com/2011/01/21/using-apache-james-mail-server/ <br>
+https://www.ibm.com/developerworks/library/j-james1/index.html <br>
+
 Install Ldap
 ------------
 
