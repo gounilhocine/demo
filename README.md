@@ -1,3 +1,11 @@
+Install Ldap
+------------
+
+https://directory.apache.org/apacheds/ <br>
+https://cwiki.apache.org/confluence/display/GMOxDOC30/ldap-sample-app+-+LDAP+Sample+Application <br>
+https://directory.apache.org/studio/  <br>
+
+
 
 Example Orc:
 -----------
