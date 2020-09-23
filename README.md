@@ -1,3 +1,13 @@
+
+Example Orc:
+-----------
+https://www.programmableweb.com/api/google-cloud-vision-grpc
+https://vidado.ai/ocr-poor-quality-docs/
+https://anyline.com/
+https://contract.fit/
+
+
+
 Liste de API indezer:
 
 Liste de API indezer:
