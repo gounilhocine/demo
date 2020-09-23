@@ -1,10 +1,10 @@
 
 Example Orc:
 -----------
-https://www.programmableweb.com/api/google-cloud-vision-grpc
-https://vidado.ai/ocr-poor-quality-docs/
-https://anyline.com/
-https://contract.fit/
+https://www.programmableweb.com/api/google-cloud-vision-grpc  <br>
+https://vidado.ai/ocr-poor-quality-docs/ <br>
+https://anyline.com/ <br>
+https://contract.fit/ <br>
 
 
 
